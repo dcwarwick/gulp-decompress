@@ -3,6 +3,7 @@ const fs = require('fs');
 const archiveType = require('archive-type');
 const decompress = require('decompress');
 const gutil = require('gulp-util');
+const path = require('path');
 const Transform = require('readable-stream/transform');
 
 module.exports = opts => new Transform({
@@ -23,19 +24,25 @@ module.exports = opts => new Transform({
 			return;
 		}
 
+//      console.log(file.path);
+//      console.dir(file);
+
 		decompress(file.contents, opts)
 			.then(files => {
 				files.forEach(x => {
+
 					const stat = new fs.Stats();
 
 					stat.mode = x.mode;
 					stat.mtime = x.mtime;
 
-					this.push(new gutil.File({
-						stat,
-						contents: x.data,
-						path: x.path
-					}));
+					let y = new gutil.File({
+						stat: stat,
+						contents: stat.isDirectory() ? null : x.data,
+						path: path.join(path.relative(file.base, path.dirname(file.path)), path.basename(file.path, path.extname(file.path)), x.path)
+					});
+
+                  this.push(y);
 				});
 
 				cb();
